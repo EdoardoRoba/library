@@ -2,7 +2,7 @@
 import * as React from "react";
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Link } from 'react-router-dom';
 import Alert from '@mui/material/Alert';
 import TextField from '@mui/material/TextField';
 import Card from '@mui/material/Card';
@@ -56,8 +56,6 @@ function Login(props) {
     }
 
     const login = () => {
-        console.log(process.env.REACT_APP_USERNAME)
-        console.log(process.env.REACT_APP_PASSWORD)
         if (username === USR && password === PWD) {
             setLoggedIn(true)
             localStorage.setItem("token", "loggedin")
