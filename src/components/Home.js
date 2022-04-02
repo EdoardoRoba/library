@@ -2,6 +2,7 @@ import axios from "axios";
 import * as React from "react";
 import { db } from '../firebase-config'
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore'
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import Button from '@mui/material/Button';
 import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
@@ -17,6 +18,8 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import SystemUpdateAltIcon from '@material-ui/icons/SystemUpdateAlt';
 import IconButton from '@mui/material/IconButton';
 import FormControlLabel from '@mui/material/FormControlLabel';
+import TextField from '@mui/material/TextField';
+import Autocomplete from '@mui/material/Autocomplete';
 import './Classes.css'
 
 const Item = styled(Paper)(({ theme }) => ({
@@ -27,6 +30,7 @@ const Item = styled(Paper)(({ theme }) => ({
 }));
 
 function Home(props) {
+    const [userIsAuthenticatedFlag, setUserIsAuthenticatedFlag] = React.useState(true)
     const [books, setBooks] = React.useState([])
     const [title, setTitle] = React.useState("")
     const [author, setAuthor] = React.useState("")
@@ -75,6 +79,7 @@ function Home(props) {
     React.useEffect(() => {
         getBooks()
         getLibraryStructure()
+        userIsAuthenticated()
     }, [])
 
     React.useEffect(() => {
@@ -112,27 +117,27 @@ function Home(props) {
     }, [library])
 
     React.useEffect(() => {
-        console.log("layout: ", layout)
+        // console.log("layout: ", layout)
     }, [layout])
 
     React.useEffect(() => {
-        console.log("books: ", books)
+        // console.log("books: ", books)
     }, [books])
 
     React.useEffect(() => {
-        console.log("booksInShelf: ", booksInShelf)
+        // console.log("booksInShelf: ", booksInShelf)
     }, [booksInShelf])
 
     React.useEffect(() => {
-        console.log("library: ", library)
+        // console.log("library: ", library)
     }, [library])
 
     React.useEffect(() => {
-        console.log("columnsLibrary: ", columnsLibrary)
+        // console.log("columnsLibrary: ", columnsLibrary)
     }, [columnsLibrary])
 
     React.useEffect(() => {
-        console.log("rowsLibrary: ", rowsLibrary)
+        // console.log("rowsLibrary: ", rowsLibrary)
     }, [rowsLibrary])
 
     const handleChangeAddBook = () => {
@@ -162,6 +167,14 @@ function Home(props) {
         setUpdateBookFlag(false);
         setGetBookFlag(false);
     };
+
+    const userIsAuthenticated = () => {
+        if (localStorage.getItem("token") === "loggedin") {
+            setUserIsAuthenticatedFlag(true)
+        } else {
+            setUserIsAuthenticatedFlag(false)
+        }
+    }
 
     const createLibrary = () => {
         var structure = []
@@ -219,18 +232,19 @@ function Home(props) {
     // GET
     const getBooks = async () => {
         const data = await getDocs(booksCollectionRef) //returns all the books of the collection
-        console.log("Books: ", data)
+        console.log("Books: ", data.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
         setBooks(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
     };
     const getLibraryStructure = async () => {
         const data = await getDocs(libraryCollectionRef) //returns all the books of the collection
-        console.log("Library: ", data)
+        console.log("Library: ", data.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
         setLibrary(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
     };
-    const getBook = async (title) => {
+    const getBook = async (titleValue) => {
         let count = 0
+        console.log(titleValue)
         books.map((b) => {
-            if (b.title.toUpperCase() === title.toUpperCase()) {
+            if (b.title.toUpperCase() === titleValue.toUpperCase()) {
                 count = count + 1
                 layout[alphabet.indexOf(b.column)][parseInt(b.row)].color = "green"
                 getBooks()
@@ -254,11 +268,11 @@ function Home(props) {
     }
 
     // PUT
-    let updateBook = (title, r, c) => {
+    let updateBook = (titleValue, r, c) => {
         var bookDoc = ""
         const newField = { row: r - 1, column: c }
         books.map((b) => {
-            if (b.title.toUpperCase() === title.toUpperCase()) {
+            if (b.title.toUpperCase() === titleValue.toUpperCase()) {
                 bookDoc = doc(db, "mybooks", b.id)
                 setConfermaUpdate(true)
             }
@@ -268,7 +282,7 @@ function Home(props) {
             getBooks()
         } else {
             setConfermaUpdate(false)
-            setNotFound(title)
+            setNotFound(titleValue)
         }
         // const bookDoc = doc(db, "mybooks", id)
         // // YOU CAN ALSO UPDATE ONLY THE FIELD YOU WANT
@@ -306,166 +320,232 @@ function Home(props) {
     }
 
     return (
-        <div style={{ width: '100vw' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', textAlign: 'center' }}>
-                <h1 style={{ fontFamily: 'times', marginLeft: '1rem', marginRight: 'auto' }}>La mia libreria</h1>
-                <Tooltip style={{ marginRight: '1rem' }} title="Aggiorna struttura libreria">
-                    <IconButton onClick={() => { setOpenLibraryUpdate(true) }}>
-                        <SystemUpdateAltIcon />
-                    </IconButton>
-                </Tooltip>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'center', textAlign: 'center', marginTop: '3rem' }}>
-                <Button variant="outlined" style={{ color: 'white', backgroundColor: 'green', marginRight: '1rem' }} onClick={handleChangeAddBook}>
-                    Aggiungi libro
-                </Button>
-                <Button variant="outlined" style={{ color: 'white', backgroundColor: 'blue', marginRight: '1rem' }} onClick={handleChangeGetBook}>
-                    Trova libro
-                </Button>
-                <Button style={{ color: 'white', backgroundColor: '#ffae1b', marginLeft: '1rem', marginRight: '1rem' }} onClick={handleChangeUpdateBook}>
-                    Aggiorna libro
-                </Button>
-                <Button style={{ color: 'white', backgroundColor: 'red', marginLeft: '1rem' }} onClick={handleChangeDeleteBook}>
-                    Elimina libro
-                </Button>
-            </div>
+        <div>
             {
-                (!addBookFlag ? "" : <Box sx={{ display: 'flex', justifyContent: 'center', textAlign: 'center' }}>
-                    <Grow
-                        in={addBookFlag}
-                        style={{ transformOrigin: '0 0 0' }}
-                        {...(addBookFlag ? { timeout: 1000 } : {})}
-                    >
-                        <div style={{ marginTop: '2rem' }}>
-                            <input placeholder="titolo" onChange={(event) => { setTitle(event.target.value) }} />
-                            <input placeholder="autore" onChange={(event) => { setAuthor(event.target.value) }} />
-                            <input placeholder="genere" onChange={(event) => { setGenre(event.target.value) }} />
-                            <input placeholder="scaffale" onChange={(event) => { setColumn(event.target.value.toUpperCase()) }} />
-                            <input placeholder="ripiano" onChange={(event) => { setRow(event.target.value) }} />
-                            <Button variant="outlined" style={{ color: 'white', backgroundColor: 'green' }} onClick={addBook}>Conferma</Button>
-                        </div>
-                    </Grow>
-                </Box>)
-            }
-            {
-                (!getBookFlag ? "" : <Box sx={{ display: 'flex', justifyContent: 'center', textAlign: 'center' }}>
-                    <Grow
-                        in={getBookFlag}
-                        style={{ transformOrigin: '0 0 0' }}
-                        {...(getBookFlag ? { timeout: 1000 } : {})}
-                    >
-                        <div style={{ marginTop: '2rem' }}>
-                            <input placeholder="titolo" onChange={(event) => { setTitle(event.target.value) }} />
-                            <Button variant="outlined" style={{ color: 'white', backgroundColor: 'green' }} onClick={() => { getBook(title) }}>Conferma</Button>
-                        </div>
-                    </Grow>
-                </Box>)
-            }
-            {
-                (!updateBookFlag ? "" : <Box sx={{ display: 'flex', justifyContent: 'center', textAlign: 'center' }}>
-                    <Grow
-                        in={updateBookFlag}
-                        style={{ transformOrigin: '0 0 0' }}
-                        {...(updateBookFlag ? { timeout: 1000 } : {})}
-                    >
-                        <div style={{ marginTop: '2rem' }}>
-                            <input placeholder="titolo" onChange={(event) => { setTitle(event.target.value) }} />
-                            <input placeholder="scaffale" onChange={(event) => { setColumn(event.target.value) }} />
-                            <input placeholder="ripiano" onChange={(event) => { setRow(event.target.value) }} />
-                            <Button style={{ color: 'white', backgroundColor: '#ffae1b', marginLeft: '1rem' }} onClick={() => { updateBook(title, row, column) }}>Conferma</Button>
-                        </div>
-                    </Grow>
-                </Box>)
-            }
-            {
-                (!deleteBookFlag ? "" : <Box sx={{ display: 'flex', justifyContent: 'center', textAlign: 'center' }}>
-                    <Grow
-                        in={deleteBookFlag}
-                        style={{ transformOrigin: '0 0 0' }}
-                        {...(deleteBookFlag ? { timeout: 1000 } : {})}
-                    >
-                        <div style={{ marginTop: '2rem' }}>
-                            <input placeholder="titolo" onChange={(event) => { setTitle(event.target.value) }} />
-                            <Button style={{ color: 'white', backgroundColor: 'red', marginLeft: '1rem' }} onClick={() => { deleteBook(title) }}>Conferma</Button>
-                        </div>
-                    </Grow>
-                </Box>)
-            }
+                !userIsAuthenticatedFlag ? <div>
+                    <Alert style={{ width: '50%', marginLeft: 'auto', marginRight: 'auto', marginTop: '10rem' }} severity="error"><h1>UTENTE NON AUTORIZZATO!</h1></Alert>
+                    <div style={{ display: 'flex', justifyContent: 'center', textAlign: 'center' }}><Button variant="outlined" onClick={() => { window.location.reload(true) }} style={{ color: 'white', backgroundColor: 'green', marginTop: '8rem' }}><Link style={{ color: 'white' }} to={"/login"}>Vai al Login</Link></Button></div>
+                </div> : <div style={{ width: '100vw' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', textAlign: 'center' }}>
+                        <h1 style={{ fontFamily: 'times', marginLeft: '1rem', marginRight: 'auto' }}>La mia libreria</h1>
+                        <Tooltip style={{ marginRight: '1rem' }} title="Aggiorna struttura libreria">
+                            <IconButton onClick={() => { setOpenLibraryUpdate(true) }}>
+                                <SystemUpdateAltIcon />
+                            </IconButton>
+                        </Tooltip>
+                    </div>
 
-            <div>
-                {
-                    (!confermaAdd) ? "" : <Alert style={{ width: '50%', marginLeft: 'auto', marginRight: 'auto', marginTop: '1rem' }} severity="success">Libro aggiunto correttamente!</Alert>
-                }
-                {
-                    (!confermaUpdate) ? "" : <Alert style={{ width: '50%', marginLeft: 'auto', marginRight: 'auto', marginTop: '1rem' }} severity="success">Libro aggiornato correttamente!</Alert>
-                }
-                {
-                    (!confermaDelete) ? "" : <Alert style={{ width: '50%', marginLeft: 'auto', marginRight: 'auto', marginTop: '1rem' }} severity="success">Libro eliminato correttamente!</Alert>
-                }
-                {
-                    (notFound === "") ? "" : <Alert style={{ width: '50%', marginLeft: 'auto', marginRight: 'auto', marginTop: '1rem' }} severity="error">Libro {notFound} non trovato! Controlla che il titolo sia scritto correttamente.</Alert>
-                }
-            </div>
-
-            {/* LIBRARY */}
-            <h2 style={{ marginTop: '5rem', fontFamily: 'times', marginLeft: '1rem' }}>Scaffali:</h2>
-            <div style={{ width: '100%', display: 'flex', justifyContent: 'center', textAlign: 'center' }}>
-                {
-                    columnsLibrary.map((c) => {
-                        return <div style={{ marginLeft: '0.5rem', marginRight: '0.5rem' }}><span>{alphabet[c]}</span>
-                            <Grid container>
-                                {
-                                    rowsLibrary.map((r) => {
-                                        return <Grid item xs={12}>
-                                            <Item onClick={() => { showShelf(r, c) }} className="hovered" style={{ backgroundColor: layout[c][r].color }}>{(r + 1).toString()}</Item>
-                                        </Grid>
-                                    })
-                                }
-                            </Grid>
-                        </div>
-                    })
-                }
-            </div>
-
-            {/* Modal to show books in the selected shelf */}
-            <Modal
-                open={open}
-                onClose={() => { handleClose(layout) }}
-                aria-labelledby="modal-modal-title"
-                aria-describedby="modal-modal-description"
-            >
-                <Box sx={style}>
-                    <Typography style={{ marginBottom: '2rem' }} id="modal-modal-title" variant="h6" component="h2">
-                        Libri nel ripiano: {shelfColumnSelected + " - " + (parseInt(shelfRowSelected) + 1).toString()}
-                    </Typography>
+                    <div style={{ display: 'flex', justifyContent: 'center', textAlign: 'center', marginTop: '3rem' }}>
+                        <Button variant="outlined" style={{ color: 'white', backgroundColor: 'green', marginRight: '1rem' }} onClick={handleChangeAddBook}>
+                            Aggiungi libro
+                        </Button>
+                        <Button variant="outlined" style={{ color: 'white', backgroundColor: 'blue', marginRight: '1rem' }} onClick={handleChangeGetBook}>
+                            Trova libro
+                        </Button>
+                        <Button style={{ color: 'white', backgroundColor: '#ffae1b', marginLeft: '1rem', marginRight: '1rem' }} onClick={handleChangeUpdateBook}>
+                            Aggiorna libro
+                        </Button>
+                        <Button style={{ color: 'white', backgroundColor: 'red', marginLeft: '1rem' }} onClick={handleChangeDeleteBook}>
+                            Elimina libro
+                        </Button>
+                    </div>
                     {
-                        (booksInShelf.length === 0) ? <span style={{ color: 'grey' }}>Nello ripiano selezionato non sono presenti libri.</span> :
-                            booksInShelf.map((bis) => {
-                                return <li style={{ marginBottom: '0.5rem' }}>{bis.title} - {bis.author}</li>
-                            })
+                        (!addBookFlag ? "" : <Box sx={{ display: 'flex', justifyContent: 'center', textAlign: 'center' }}>
+                            <Grow
+                                in={addBookFlag}
+                                style={{ transformOrigin: '0 0 0' }}
+                                {...(addBookFlag ? { timeout: 1000 } : {})}
+                            >
+                                <div style={{ marginTop: '2rem' }}>
+                                    <input placeholder="titolo" onChange={(event) => { setTitle(event.target.value) }} />
+                                    <input placeholder="autore" onChange={(event) => { setAuthor(event.target.value) }} />
+                                    <input placeholder="genere" onChange={(event) => { setGenre(event.target.value) }} />
+                                    <input placeholder="scaffale" onChange={(event) => { setColumn(event.target.value.toUpperCase()) }} />
+                                    <input placeholder="ripiano" onChange={(event) => { setRow(event.target.value) }} />
+                                    <Button variant="outlined" style={{ color: 'white', backgroundColor: 'green' }} onClick={addBook}>Conferma</Button>
+                                </div>
+                            </Grow>
+                        </Box>)
                     }
-                </Box>
-            </Modal>
+                    {
+                        (!getBookFlag ? "" : <Box sx={{ display: 'flex', justifyContent: 'center', textAlign: 'center', marginLeft: "auto", marginRight: "auto" }}>
+                            <Grow
+                                in={getBookFlag}
+                                style={{ transformOrigin: '0 0 0' }}
+                                {...(getBookFlag ? { timeout: 1000 } : {})}
+                            >
+                                <div style={{ marginTop: '2rem' }}>
+                                    {/* <input placeholder="titolo" onChange={(event) => { setTitle(event.target.value) }} /> */}
+                                    <Autocomplete
+                                        id="tags-standard"
+                                        style={{ width: "300%" }}
+                                        options={books}
+                                        getOptionLabel={(option) => option.title}
+                                        renderInput={(params) => (
+                                            <TextField
+                                                {...params}
+                                                variant="standard"
+                                                label="libri esistenti"
+                                                placeholder="libri esistenti"
+                                            />
+                                        )}
+                                        onChange={(event, value) => {
+                                            if (value !== null) {
+                                                setTitle(value)
+                                                getBook(value.title)
+                                            }
+                                        }}
+                                    />
+                                    {/* <Button variant="outlined" style={{ color: 'white', backgroundColor: 'green' }} onClick={() => { getBook(title) }}>Conferma</Button> */}
+                                </div>
+                            </Grow>
+                        </Box>)
+                    }
+                    {
+                        (!updateBookFlag ? "" : <Box sx={{ display: 'flex', justifyContent: 'center', textAlign: 'center' }}>
+                            <Grow
+                                in={updateBookFlag}
+                                style={{ transformOrigin: '0 0 0' }}
+                                {...(updateBookFlag ? { timeout: 1000 } : {})}
+                            >
+                                <div>
+                                    <div style={{ marginTop: '1rem' }}>
+                                        <Autocomplete
+                                            id="tags-standard"
+                                            style={{ width: "100%", marginBottom: "1rem" }}
+                                            options={books}
+                                            getOptionLabel={(option) => option.title}
+                                            renderInput={(params) => (
+                                                <TextField
+                                                    {...params}
+                                                    variant="standard"
+                                                    label="libri esistenti"
+                                                    placeholder="libri esistenti"
+                                                />
+                                            )}
+                                            onChange={(event, value) => {
+                                                if (value !== null) {
+                                                    setTitle(value.title)
+                                                }
+                                            }}
+                                        />
+                                        <input placeholder="scaffale" onChange={(event) => { setColumn(event.target.value) }} />
+                                        <input placeholder="ripiano" onChange={(event) => { setRow(event.target.value) }} />
+                                    </div>
+                                    <Button style={{ color: 'white', backgroundColor: '#ffae1b', marginTop: '1rem' }} onClick={() => { updateBook(title, row, column) }}>Conferma</Button>
+                                </div>
+                            </Grow>
+                        </Box>)
+                    }
+                    {
+                        (!deleteBookFlag ? "" : <Box sx={{ display: 'flex', justifyContent: 'center', textAlign: 'center' }}>
+                            <Grow
+                                in={deleteBookFlag}
+                                style={{ transformOrigin: '0 0 0' }}
+                                {...(deleteBookFlag ? { timeout: 1000 } : {})}
+                            >
+                                <div style={{ marginTop: '2rem' }}>
+                                    <Autocomplete
+                                        id="tags-standard"
+                                        style={{ width: "200%", marginBottom: "1rem" }}
+                                        options={books}
+                                        getOptionLabel={(option) => option.title}
+                                        renderInput={(params) => (
+                                            <TextField
+                                                {...params}
+                                                variant="standard"
+                                                label="libri esistenti"
+                                                placeholder="libri esistenti"
+                                            />
+                                        )}
+                                        onChange={(event, value) => {
+                                            if (value !== null) {
+                                                setTitle(value.title)
+                                            }
+                                        }}
+                                    />
+                                    <Button style={{ color: 'white', backgroundColor: 'red', marginLeft: '1rem' }} onClick={() => { deleteBook(title) }}>Conferma</Button>
+                                </div>
+                            </Grow>
+                        </Box>)
+                    }
 
-            {/* Modal to update library structure */}
-            <Modal
-                open={openLibraryUpdate}
-                onClose={() => { handleCloseLibraryUpdate(layout) }}
-                aria-labelledby="modal-modal-title"
-                aria-describedby="modal-modal-description"
-            >
-                <Box sx={style}>
-                    <Typography style={{ marginBottom: '2rem' }} id="modal-modal-title" variant="h6" component="h2">
-                        Seleziona la nuova struttura della tua libreria:
-                    </Typography>
-                    <input placeholder="numero di scaffali" onChange={(event) => { setColumnLayout(event.target.value) }} />
-                    <input placeholder="numero di ripiani" onChange={(event) => { setRowLayout(event.target.value) }} />
-                    <Button style={{ color: 'white', backgroundColor: '#ffae1b', marginLeft: '1rem' }} onClick={() => { updateLibraryLayout(rowLayout, columnLayout) }}>Conferma</Button>
-                </Box>
-            </Modal>
+                    <div>
+                        {
+                            (!confermaAdd) ? "" : <Alert style={{ width: '50%', marginLeft: 'auto', marginRight: 'auto', marginTop: '1rem' }} severity="success">Libro aggiunto correttamente!</Alert>
+                        }
+                        {
+                            (!confermaUpdate) ? "" : <Alert style={{ width: '50%', marginLeft: 'auto', marginRight: 'auto', marginTop: '1rem' }} severity="success">Libro aggiornato correttamente!</Alert>
+                        }
+                        {
+                            (!confermaDelete) ? "" : <Alert style={{ width: '50%', marginLeft: 'auto', marginRight: 'auto', marginTop: '1rem' }} severity="success">Libro eliminato correttamente!</Alert>
+                        }
+                        {
+                            (notFound === "") ? "" : <Alert style={{ width: '50%', marginLeft: 'auto', marginRight: 'auto', marginTop: '1rem' }} severity="error">Libro {notFound} non trovato! Controlla che il titolo sia scritto correttamente.</Alert>
+                        }
+                    </div>
 
-        </div >
+                    {/* LIBRARY */}
+                    <h2 style={{ marginTop: '5rem', fontFamily: 'times', marginLeft: '1rem' }}>Scaffali:</h2>
+                    <div style={{ width: '100%', display: 'flex', justifyContent: 'center', textAlign: 'center' }}>
+                        {
+                            columnsLibrary.map((c) => {
+                                return <div style={{ marginLeft: '0.5rem', marginRight: '0.5rem' }}><span>{alphabet[c]}</span>
+                                    <Grid container>
+                                        {
+                                            rowsLibrary.map((r) => {
+                                                return <Grid item xs={12}>
+                                                    <Item onClick={() => { showShelf(r, c) }} className="hovered" style={{ backgroundColor: layout[c][r].color }}>{(r + 1).toString()}</Item>
+                                                </Grid>
+                                            })
+                                        }
+                                    </Grid>
+                                </div>
+                            })
+                        }
+                    </div>
+
+                    {/* Modal to show books in the selected shelf */}
+                    <Modal
+                        open={open}
+                        onClose={() => { handleClose(layout) }}
+                        aria-labelledby="modal-modal-title"
+                        aria-describedby="modal-modal-description"
+                    >
+                        <Box sx={style}>
+                            <Typography style={{ marginBottom: '2rem' }} id="modal-modal-title" variant="h6" component="h2">
+                                Libri nel ripiano: {shelfColumnSelected + " - " + (parseInt(shelfRowSelected) + 1).toString()}
+                            </Typography>
+                            {
+                                (booksInShelf.length === 0) ? <span style={{ color: 'grey' }}>Nello ripiano selezionato non sono presenti libri.</span> :
+                                    booksInShelf.map((bis) => {
+                                        return <li style={{ marginBottom: '0.5rem' }}>{bis.title} - {bis.author}</li>
+                                    })
+                            }
+                        </Box>
+                    </Modal>
+
+                    {/* Modal to update library structure */}
+                    <Modal
+                        open={openLibraryUpdate}
+                        onClose={() => { handleCloseLibraryUpdate(layout) }}
+                        aria-labelledby="modal-modal-title"
+                        aria-describedby="modal-modal-description"
+                    >
+                        <Box sx={style}>
+                            <Typography style={{ marginBottom: '2rem' }} id="modal-modal-title" variant="h6" component="h2">
+                                Seleziona la nuova struttura della tua libreria:
+                            </Typography>
+                            <input placeholder="numero di scaffali" onChange={(event) => { setColumnLayout(event.target.value) }} />
+                            <input placeholder="numero di ripiani" onChange={(event) => { setRowLayout(event.target.value) }} />
+                            <Button style={{ color: 'white', backgroundColor: '#ffae1b', marginLeft: '1rem' }} onClick={() => { updateLibraryLayout(rowLayout, columnLayout) }}>Conferma</Button>
+                        </Box>
+                    </Modal>
+
+                </div >
+            }
+
+        </div>
     );
 }
 
