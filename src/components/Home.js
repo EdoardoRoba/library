@@ -1,4 +1,3 @@
-import axios from "axios";
 import * as React from "react";
 import { db } from '../firebase-config'
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore'
@@ -10,14 +9,11 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
 import { styled } from '@mui/material/styles';
-import Switch from '@mui/material/Switch';
 import Grow from '@mui/material/Grow';
 import Alert from '@mui/material/Alert';
 import Tooltip from '@mui/material/Tooltip';
-import DeleteIcon from '@material-ui/icons/Delete';
 import SystemUpdateAltIcon from '@material-ui/icons/SystemUpdateAlt';
 import IconButton from '@mui/material/IconButton';
-import FormControlLabel from '@mui/material/FormControlLabel';
 import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
 import './Classes.css'
@@ -203,9 +199,9 @@ function Home(props) {
         setOpen(false)
         setBooksInShelf([])
         l.map((col) => {
-            col.map((row) => {
+            col.map((row) =>
                 row.color = "#964b00c7"
-            })
+            )
         })
         setLayout(l)
     };
@@ -219,7 +215,7 @@ function Home(props) {
     const showShelf = (row, column) => {
         // I take the books in this shelf
         const bInShelf = books.filter(book =>
-            book.row == row.toString() && book.column == alphabet[column].toString()
+            book.row === row.toString() && book.column === alphabet[column].toString()
         )
         layout[column][row].color = "green"
         setLayout(layout)
