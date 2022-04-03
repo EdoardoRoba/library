@@ -352,7 +352,7 @@ function Home(props) {
                     <div style={{ display: 'flex', justifyContent: 'center', textAlign: 'center' }}><Button variant="outlined" onClick={() => { window.location.reload(true) }} style={{ color: 'white', backgroundColor: 'green', marginTop: '8rem' }}><Link style={{ color: 'white' }} to={"/login"}>Vai al Login</Link></Button></div>
                 </div> : <div style={{ width: '100vw' }}>
                     <div style={{ display: 'flex', justifyContent: 'center', textAlign: 'center' }}>
-                        <h1 style={{ fontFamily: 'times', marginLeft: '1rem', marginRight: 'auto' }}>La mia libreria</h1>
+                        <h1 style={{ fontFamily: 'times', marginLeft: '1rem', marginRight: 'auto' }}>La mia libreria - totale: {books.length} libri</h1>
                         <Tooltip style={{ marginRight: '1rem' }} title="Aggiorna struttura libreria">
                             <IconButton onClick={() => { setOpenLibraryUpdate(true) }}>
                                 <SystemUpdateAltIcon />
@@ -537,7 +537,7 @@ function Home(props) {
                     <div style={{ width: '100%', display: 'flex', justifyContent: 'center', textAlign: 'center' }}>
                         {
                             columnsLibrary.map((c) => {
-                                return <div style={{ marginLeft: '0.5rem', marginRight: '0.5rem' }}><span>{alphabet[c]}</span>
+                                return <div style={{ marginLeft: '0.5rem', marginRight: '0.5rem' }}><span>{alphabet[c]} - {books.filter((b) => b.column.toUpperCase() === alphabet[c].toUpperCase()).length} libri</span>
                                     <Grid container>
                                         {
                                             rowsLibrary.map((r) => {
@@ -560,8 +560,11 @@ function Home(props) {
                         aria-describedby="modal-modal-description"
                     >
                         <Box sx={style} style={{ maxHeight: '80%', overflowY: 'auto', marginRight: 'auto', marginLeft: 'auto', justifyContent: 'center', alignItems: 'center' }}>
-                            <Typography style={{ marginBottom: '2rem' }} id="modal-modal-title" variant="h6" component="h2">
+                            <Typography style={{ marginBottom: '.5rem' }} id="modal-modal-title" variant="h6" component="h2">
                                 Libri nel ripiano: {shelfColumnSelected + " - " + (parseInt(shelfRowSelected) + 1).toString()}
+                            </Typography>
+                            <Typography style={{ marginBottom: '2rem' }} id="modal-modal-title" variant="h6" component="h2">
+                                Libri presenti in questo ripiano: {books.filter((b) => b.column.toUpperCase() === shelfColumnSelected.toUpperCase() && b.row.toString() === (parseInt(shelfRowSelected)).toString()).length}
                             </Typography>
                             {
                                 (booksInShelf.length === 0) ? <span style={{ color: 'grey' }}>Nello ripiano selezionato non sono presenti libri.</span> :
