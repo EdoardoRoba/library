@@ -56,6 +56,7 @@ function Home(props) {
 
     const booksCollectionRef = collection(db, "mybooks")
     const libraryCollectionRef = collection(db, "library")
+    const { v4: uuidv4 } = require('uuid')
 
     const alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "Z"]
 
@@ -236,9 +237,10 @@ function Home(props) {
         console.log("Library: ", data.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
         setLibrary(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
     };
-    const getBook = async (titleValue) => {
+
+    const getBookByTitle = async (titleValue) => {
         let count = 0
-        console.log(titleValue)
+        // console.log(titleValue)
         books.map((b) => {
             if (b.title.toUpperCase() === titleValue.toUpperCase()) {
                 count = count + 1
@@ -256,9 +258,28 @@ function Home(props) {
         }
     };
 
+    const getBookByAuthor = async (authorValue) => {
+        let count = 0
+        books.map((b) => {
+            if (b.author.toUpperCase() === authorValue.toUpperCase()) {
+                count = count + 1
+                layout[alphabet.indexOf(b.column)][parseInt(b.row)].color = "green"
+                getBooks()
+                const timer = setTimeout(() => {
+                    layout[alphabet.indexOf(b.column)][parseInt(b.row)].color = "#964b00c7"
+                    getBooks()
+                }, 7000);
+                return () => clearTimeout(timer);
+            }
+        })
+        if (count === 0) {
+            setNotFound(title)
+        }
+    };
+
     // POST
     let addBook = () => {
-        addDoc(booksCollectionRef, { title: title, author: author, genre: genre, row: (parseInt(row) - 1).toString(), column: column })
+        addDoc(booksCollectionRef, { title: title, author: author, genre: genre, row: (parseInt(row) - 1).toString(), column: column, id: uuidv4() })
         setConfermaAdd(true)
         getBooks()
     }
@@ -374,21 +395,43 @@ function Home(props) {
                                     {/* <input placeholder="titolo" onChange={(event) => { setTitle(event.target.value) }} /> */}
                                     <Autocomplete
                                         id="tags-standard"
-                                        style={{ width: "300%" }}
+                                        sx={{ width: "300%" }}
                                         options={books}
                                         getOptionLabel={(option) => option.title}
                                         renderInput={(params) => (
                                             <TextField
                                                 {...params}
                                                 variant="standard"
-                                                label="libri esistenti"
-                                                placeholder="libri esistenti"
+                                                label="Cerca per titolo"
+                                                placeholder="Cerca per titolo"
                                             />
                                         )}
                                         onChange={(event, value) => {
+                                            setAuthor("")
                                             if (value !== null) {
                                                 setTitle(value)
-                                                getBook(value.title)
+                                                getBookByTitle(value.title)
+                                            }
+                                        }}
+                                    />
+                                    <Autocomplete
+                                        id="tags-standard"
+                                        style={{ width: "300%" }}
+                                        options={books}
+                                        getOptionLabel={(option) => option.author}
+                                        renderInput={(params) => (
+                                            <TextField
+                                                {...params}
+                                                variant="standard"
+                                                label="Cerca per autore"
+                                                placeholder="Cerca per autore"
+                                            />
+                                        )}
+                                        onChange={(event, value) => {
+                                            setTitle(null)
+                                            if (value !== null) {
+                                                setAuthor(value)
+                                                getBookByAuthor(value.author)
                                             }
                                         }}
                                     />
