@@ -28,6 +28,7 @@ const Item = styled(Paper)(({ theme }) => ({
 function Home(props) {
     const [userIsAuthenticatedFlag, setUserIsAuthenticatedFlag] = React.useState(true)
     const [books, setBooks] = React.useState([])
+    const [authorsForSelect, setAuthorsForSelect] = React.useState([])
     const [title, setTitle] = React.useState("")
     const [author, setAuthor] = React.useState("")
     const [genre, setGenre] = React.useState("")
@@ -65,7 +66,8 @@ function Home(props) {
         top: '50%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
-        width: 400,
+        width: "80%",
+        height: "80%",
         bgcolor: 'background.paper',
         border: '2px solid #000',
         boxShadow: 24,
@@ -119,6 +121,12 @@ function Home(props) {
 
     React.useEffect(() => {
         // console.log("books: ", books)
+        let aFS = books.map((b) => b.author)
+        aFS = aFS.filter((x, i, a) => {
+            return a.indexOf(x) === i
+        })
+        aFS = aFS.map((b) => { return { label: b } })
+        setAuthorsForSelect(aFS)
     }, [books])
 
     React.useEffect(() => {
@@ -229,12 +237,12 @@ function Home(props) {
     // GET
     const getBooks = async () => {
         const data = await getDocs(booksCollectionRef) //returns all the books of the collection
-        console.log("Books: ", data.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
+        // console.log("Books: ", data.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
         setBooks(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
     };
     const getLibraryStructure = async () => {
         const data = await getDocs(libraryCollectionRef) //returns all the books of the collection
-        console.log("Library: ", data.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
+        // console.log("Library: ", data.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
         setLibrary(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
     };
 
@@ -417,8 +425,8 @@ function Home(props) {
                                     <Autocomplete
                                         id="tags-standard"
                                         style={{ width: "300%" }}
-                                        options={books}
-                                        getOptionLabel={(option) => option.author}
+                                        options={authorsForSelect}
+                                        getOptionLabel={(option) => option.label}
                                         renderInput={(params) => (
                                             <TextField
                                                 {...params}
@@ -430,8 +438,8 @@ function Home(props) {
                                         onChange={(event, value) => {
                                             setTitle(null)
                                             if (value !== null) {
-                                                setAuthor(value)
-                                                getBookByAuthor(value.author)
+                                                setAuthor(value.label)
+                                                getBookByAuthor(value.label)
                                             }
                                         }}
                                     />
@@ -551,14 +559,14 @@ function Home(props) {
                         aria-labelledby="modal-modal-title"
                         aria-describedby="modal-modal-description"
                     >
-                        <Box sx={style}>
+                        <Box sx={style} style={{ maxHeight: '80%', overflowY: 'auto', marginRight: 'auto', marginLeft: 'auto', justifyContent: 'center', alignItems: 'center' }}>
                             <Typography style={{ marginBottom: '2rem' }} id="modal-modal-title" variant="h6" component="h2">
                                 Libri nel ripiano: {shelfColumnSelected + " - " + (parseInt(shelfRowSelected) + 1).toString()}
                             </Typography>
                             {
                                 (booksInShelf.length === 0) ? <span style={{ color: 'grey' }}>Nello ripiano selezionato non sono presenti libri.</span> :
                                     booksInShelf.map((bis) => {
-                                        return <li style={{ marginBottom: '0.5rem' }}>{bis.title} - {bis.author}</li>
+                                        return <li style={{ marginBottom: '0.5rem', marginRight: 'auto', marginLeft: 'auto' }}>{bis.title} - {bis.author}</li>
                                     })
                             }
                         </Box>
