@@ -293,17 +293,18 @@ function Home(props) {
     }
 
     // PUT
-    let updateBook = (titleValue, r, c) => {
+    let updateBook = async (titleValue, r, c) => {
         var bookDoc = ""
-        const newField = { row: r - 1, column: c }
+        const newField = { row: (parseInt(row) - 1).toString(), column: c }
         books.map((b) => {
             if (b.title.toUpperCase() === titleValue.toUpperCase()) {
                 bookDoc = doc(db, "mybooks", b.id)
-                setConfermaUpdate(true)
+                getBooks()
             }
         })
         if (bookDoc !== "") {
             updateDoc(bookDoc, newField)
+            setConfermaUpdate(true)
             getBooks()
         } else {
             setConfermaUpdate(false)
@@ -313,7 +314,6 @@ function Home(props) {
         // // YOU CAN ALSO UPDATE ONLY THE FIELD YOU WANT
         // const newField = { title: newTitle }
         // updateDoc(bookDoc, newField)
-        getBooks()
     }
 
     let updateLibraryLayout = (r, c) => {
