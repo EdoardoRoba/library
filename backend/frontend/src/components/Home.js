@@ -1,3 +1,4 @@
+import { axiosInstance } from "../config.js"
 import * as React from "react";
 import { db } from '../firebase-config'
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore'
@@ -53,6 +54,7 @@ function Home(props) {
     const [confermaUpdate, setConfermaUpdate] = React.useState(false);
     const [confermaDelete, setConfermaDelete] = React.useState(false);
     const [notFound, setNotFound] = React.useState("");
+    const [selectedBook, setSelectedBook] = React.useState(null);
     // const handleOpen = () => setOpen(true);
 
     const booksCollectionRef = collection(db, "mybooks")
@@ -150,6 +152,7 @@ function Home(props) {
         setUpdateBookFlag(false);
         setDeleteBookFlag(false);
         setGetBookFlag(false);
+        setSelectedBook(null)
     };
 
     const handleChangeGetBook = () => {
@@ -157,6 +160,7 @@ function Home(props) {
         setUpdateBookFlag(false);
         setDeleteBookFlag(false);
         setAddBookFlag(false);
+        setSelectedBook(null)
     };
 
     const handleChangeUpdateBook = () => {
@@ -164,6 +168,7 @@ function Home(props) {
         setAddBookFlag(false);
         setDeleteBookFlag(false);
         setGetBookFlag(false);
+        setSelectedBook(null)
     };
 
     const handleChangeDeleteBook = () => {
@@ -171,6 +176,7 @@ function Home(props) {
         setAddBookFlag(false);
         setUpdateBookFlag(false);
         setGetBookFlag(false);
+        setSelectedBook(null)
     };
 
     const userIsAuthenticated = () => {
@@ -236,14 +242,24 @@ function Home(props) {
 
     // GET
     const getBooks = async () => {
-        const data = await getDocs(booksCollectionRef) //returns all the books of the collection
-        // console.log("Books: ", data.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
-        setBooks(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
+        // const data = await getDocs(booksCollectionRef) //returns all the books of the collection
+        // // console.log("Books: ", data.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
+        // setBooks(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
+        axiosInstance.get('book')
+            .then(res => {
+                // console.log("Books: ", res.data)
+                setBooks(res.data)
+            })
     };
     const getLibraryStructure = async () => {
-        const data = await getDocs(libraryCollectionRef) //returns all the books of the collection
-        // console.log("Library: ", data.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
-        setLibrary(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
+        // const data = await getDocs(libraryCollectionRef) //returns all the books of the collection
+        // // console.log("Library: ", data.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
+        // setLibrary(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
+        axiosInstance.get('library')
+            .then(res => {
+                // console.log("Library: ", res.data)
+                setLibrary(res.data)
+            })
     };
 
     const getBookByTitle = async (titleValue) => {
@@ -287,29 +303,37 @@ function Home(props) {
 
     // POST
     let addBook = () => {
-        addDoc(booksCollectionRef, { title: title, author: author, genre: genre, row: (parseInt(row) - 1).toString(), column: column, id: uuidv4() })
-        setConfermaAdd(true)
-        getBooks()
+        // addDoc(booksCollectionRef, { title: title, author: author, genre: genre, row: (parseInt(row) - 1).toString(), column: column })
+        axiosInstance.post('book', { title: title, author: author, genre: genre, row: (parseInt(row) - 1).toString(), column: column }).then(() => {
+            setConfermaAdd(true)
+            getBooks()
+        }).catch((err) => {
+            console.log("error")
+        })
     }
 
     // PUT
     let updateBook = async (titleValue, r, c) => {
         var bookDoc = ""
         const newField = { row: (parseInt(row) - 1).toString(), column: c }
-        books.map((b) => {
-            if (b.title.toUpperCase() === titleValue.toUpperCase()) {
-                bookDoc = doc(db, "mybooks", b.id)
-                getBooks()
-            }
-        })
-        if (bookDoc !== "") {
-            updateDoc(bookDoc, newField)
+        // books.map((b) => {
+        //     if (b.title.toUpperCase() === titleValue.toUpperCase()) {
+        //         bookDoc = doc(db, "mybooks", b.id)
+        //         getBooks()
+        //     }
+        // })
+        // if (bookDoc !== "") {
+        // updateDoc(bookDoc, newField)
+        axiosInstance.put('book/' + selectedBook._id, newField).then(() => {
             setConfermaUpdate(true)
             getBooks()
-        } else {
-            setConfermaUpdate(false)
-            setNotFound(titleValue)
-        }
+        }).catch((err) => {
+            console.log("error")
+        })
+        // } else {
+        //     setConfermaUpdate(false)
+        //     setNotFound(titleValue)
+        // }
         // const bookDoc = doc(db, "mybooks", id)
         // // YOU CAN ALSO UPDATE ONLY THE FIELD YOU WANT
         // const newField = { title: newTitle }
@@ -318,30 +342,42 @@ function Home(props) {
 
     let updateLibraryLayout = (r, c) => {
         const newField = { rows: r, columns: c }
-        const libraryDoc = doc(db, "library", "2NWAE0SmfJ7ACt4hW9y0")
-        updateDoc(libraryDoc, newField)
-        getBooks()
-        getLibraryStructure()
-        setOpenLibraryUpdate(false)
+        // const libraryDoc = doc(db, "library", "2NWAE0SmfJ7ACt4hW9y0")
+        // updateDoc(libraryDoc, newField)
+        axiosInstance.put('library/' + library[0]._id, newField).then(() => {
+            getBooks()
+            getLibraryStructure()
+            setOpenLibraryUpdate(false)
+        }).catch((err) => {
+            console.log("error")
+        })
+
     }
 
     // DELETE
     let deleteBook = (title) => {
-        var userDoc = ""
-        books.map((b) => {
-            if (b.title.toUpperCase() === title.toUpperCase()) {
-                userDoc = doc(db, "mybooks", b.id);
+        // var userDoc = ""
+        // books.map((b) => {
+        //     if (b.title.toUpperCase() === title.toUpperCase()) {
+        //         userDoc = doc(db, "mybooks", b.id);
+        //         setConfermaDelete(true)
+        //     }
+        // })
+        // if (userDoc !== "") {
+        // deleteDoc(userDoc);
+        axiosInstance.delete('book/' + selectedBook._id)
+            .then(() => {
                 setConfermaDelete(true)
-            }
-        })
-        if (userDoc !== "") {
-            deleteDoc(userDoc);
-            getBooks()
-        } else {
-            setConfermaDelete(false)
-            setNotFound(title)
-        }
+                getBooks()
+            }).catch(error => {
+                console.log(error)
+            });
         getBooks()
+        // } else {
+        //     setConfermaDelete(false)
+        //     setNotFound(title)
+        // }
+        // getBooks()
     }
 
     return (
@@ -473,6 +509,7 @@ function Home(props) {
                                             onChange={(event, value) => {
                                                 if (value !== null) {
                                                     setTitle(value.title)
+                                                    setSelectedBook(value)
                                                 }
                                             }}
                                         />
@@ -508,6 +545,7 @@ function Home(props) {
                                         onChange={(event, value) => {
                                             if (value !== null) {
                                                 setTitle(value.title)
+                                                setSelectedBook(value)
                                             }
                                         }}
                                     />
