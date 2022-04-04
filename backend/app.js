@@ -13,6 +13,7 @@ const app = express();
 const feUrl = "https://mylibrary-herokuapp.herokuapp.com"
 const port = process.env.PORT || 8050
 // const idEmailAlert = '62086ab09422a5466157fe5a'
+const path = require('path');
 
 // COMMENT WHEN RUNNING LOCALLY
 app.use(express.static(path.join(__dirname, "/frontend/build")));
