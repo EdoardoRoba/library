@@ -2,12 +2,12 @@ const express = require('express')
 const mongoose = require('mongoose')
 const xlsx = require('xlsx')
 const upload = require('express-fileupload')
-const Book = require('./models/Book')
+const Book = require('./models/book')
+const Library = require('./models/library')
 // const bodyParser = require('body-parser')
 require('dotenv').config();
 var cors = require('cors')
 const jwt = require("jsonwebtoken")
-const Library = require('./models/library')
 const app = express();
 const feUrl = "http://localhost:3000"
 // const feUrl = "https://my-warehouse-app-heroku.herokuapp.com"
