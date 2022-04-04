@@ -1,6 +1,6 @@
 import axios from "axios"
 
 export const axiosInstance = axios.create({
-    // baseURL: "https://mylibrary-herokuapp.herokuapp.com//api/"
-    baseURL: "http://localhost:8050/api/"
+    baseURL: "https://mylibrary-herokuapp.herokuapp.com/api/"
+    // baseURL: "http://localhost:8050/api/"
 })
