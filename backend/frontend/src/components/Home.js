@@ -180,11 +180,11 @@ function Home(props) {
     };
 
     const userIsAuthenticated = () => {
-        // if (localStorage.getItem("token") === "loggedin") {
-        //     setUserIsAuthenticatedFlag(true)
-        // } else {
-        setUserIsAuthenticatedFlag(false)
-        // }
+        if (localStorage.getItem("token") === "loggedin") {
+            setUserIsAuthenticatedFlag(true)
+        } else {
+            setUserIsAuthenticatedFlag(false)
+        }
     }
 
     const createLibrary = () => {
@@ -243,7 +243,7 @@ function Home(props) {
     // GET
     const getBooks = async () => {
         // const data = await getDocs(booksCollectionRef) //returns all the books of the collection
-        // // console.log("Books: ", data.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
+        // console.log("Books: ", data.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
         // setBooks(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
         axiosInstance.get('book')
             .then(res => {
@@ -384,7 +384,7 @@ function Home(props) {
         <div>
             {
                 !userIsAuthenticatedFlag ? <div>
-                    <Alert style={{ width: '50%', marginLeft: 'auto', marginRight: 'auto', marginTop: '10rem' }} severity="error"><h1>SITO IN MANUTENZIONE! (entro oggi dovrebbe sbloccarsi)</h1></Alert>
+                    <Alert style={{ width: '50%', marginLeft: 'auto', marginRight: 'auto', marginTop: '10rem' }} severity="error"><h1>UTENTE NON AUTORIZZATO!</h1></Alert>
                     <div style={{ display: 'flex', justifyContent: 'center', textAlign: 'center' }}><Button variant="outlined" onClick={() => { window.location.reload(true) }} style={{ color: 'white', backgroundColor: 'green', marginTop: '8rem' }}><Link style={{ color: 'white' }} to={"/login"}>Vai al Login</Link></Button></div>
                 </div> : <div style={{ width: '100vw' }}>
                     <div style={{ display: 'flex', justifyContent: 'center', textAlign: 'center' }}>
